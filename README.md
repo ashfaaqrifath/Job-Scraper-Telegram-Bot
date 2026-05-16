@@ -1,17 +1,18 @@
 # QA Job Daily Scraper
 
-Runs every weekday at **10:07 WAT (09:07 UTC)** via GitHub Actions.
-Searches remote QA / QA Automation job sources, filters them, and sends a
+Runs every weekday at **08:37 Sri Lanka time (03:07 UTC)** via GitHub Actions.
+Searches QA / QA Automation job sources, filters them for Sri Lanka-friendly fresh graduate roles, and sends a
 Telegram digest to your configured chat.
 
 ## What It Does
 
 | Step | Detail |
 |------|--------|
-| **Sources** | Indeed, ZipRecruiter, We Work Remotely, Remotive, RemoteOK, Greenhouse, Lever, Jobright, Jobicy, Working Nomads |
-| **Roles** | QA Engineer, QA Automation Engineer, SDET, Test Automation Engineer, Performance Test Engineer, Security Test Engineer |
-| **Timezone filter** | Roles in UTC-1 to UTC+3, plus worldwide/global roles |
-| **Salary gate** | At least NGN 2,000,000/month equivalent; undisclosed salaries are included |
+| **Sources** | Indeed, ZipRecruiter, We Work Remotely, Remotive, RemoteOK, Greenhouse, Lever, Jobright, Jobicy, Working Nomads, Work at a Startup, Arbeitnow, Remote First Jobs, RemoteJobs.org, WorkAnywhere, Himalayas, HireWeb3 |
+| **Roles** | QA Intern, Trainee QA, Associate QA Engineer, Junior QA Engineer, Graduate QA Engineer, QA Engineer, Software Test Engineer, Automation QA Engineer |
+| **Location filter** | Sri Lanka remote/hybrid/onsite roles, plus Sri Lanka-friendly remote roles |
+| **Timezone filter** | Sri Lanka/India, APAC, Singapore, Australia/NZ, Middle East, UK/EU/EMEA, and worldwide/global roles |
+| **Salary gate** | Disabled by default for fresh-grad roles; set `MIN_LKR_MONTHLY` if you want a minimum |
 | **Company signals** | Priority companies are sorted to the top |
 | **Resume keywords** | Each job includes matched skills from the job description |
 | **Deduplication** | Cross-source duplicates are removed |
@@ -63,7 +64,8 @@ Go to **Settings -> Secrets and variables -> Actions -> New repository secret** 
 |-------------|-------|
 | `TELEGRAM_BOT_TOKEN` | Bot token from `@BotFather` |
 | `TELEGRAM_CHAT_ID` | Your Telegram user, group, or channel chat ID |
-| `EXCHANGE_RATE_API_KEY` | Optional free key from exchangerate-api.com |
+| `EXCHANGE_RATE_API_KEY` | Optional free key from exchangerate-api.com for LKR conversion |
+| `MIN_LKR_MONTHLY` | Optional minimum monthly salary in LKR; omit or set `0` to include undisclosed/low-stipend internships |
 
 ### 5. Test immediately
 
@@ -79,7 +81,7 @@ python -m venv .venv
 pip install -r scripts\requirements.txt
 $env:TELEGRAM_BOT_TOKEN="your_bot_token"
 $env:TELEGRAM_CHAT_ID="your_chat_id"
-python scripts\job_scraper.py
+python scripts\main.py
 ```
 
 ## Project Structure
@@ -90,7 +92,7 @@ python scripts\job_scraper.py
 │   └── workflows/
 │       └── daily_job_scraper.yml
 └── scripts/
-    ├── job_scraper.py
+    ├── main.py
     └── requirements.txt
 ```
 
@@ -98,9 +100,9 @@ python scripts\job_scraper.py
 
 | What to change | Where |
 |----------------|-------|
-| Add or remove job titles | `JOBSPY_QUERIES` list in `scripts/job_scraper.py` |
+| Add or remove job titles | `JOBSPY_QUERIES` list in `scripts/main.py` |
 | Adjust timezone window | `ACCEPTED_TZ_TOKENS` and `is_timezone_ok()` |
-| Change minimum salary | `MIN_NGN_MONTHLY` constant |
+| Change minimum salary | `MIN_LKR_MONTHLY` env var or default in `scripts/main.py` |
 | Add priority companies | `PRIORITY_COMPANIES` set |
 | Add skill keywords | `SKILL_KEYWORDS` list |
 | Run on weekends too | Change `1-5` to `*` in the cron expression |
@@ -111,6 +113,6 @@ Each job message includes:
 
 - Job title, company, location, source, and date posted
 - Type labels such as UI Automation, Performance, Security, API Testing, or Mobile
-- Salary estimate in NGN/month
+- Salary estimate in LKR/month when salary is disclosed
 - Resume keyword matches
 - Direct apply link
