@@ -1,0 +1,54 @@
+name: Daily Job Telegram Digest
+
+on:
+  schedule:
+    # 03:07 UTC = 08:37 Sri Lanka time (UTC+5:30) — Monday through Friday.
+    # Note: GitHub Actions cron is best-effort. Top-of-hour (:00) is the worst
+    # slot because millions of jobs queue at once. An off-cycle minute like :07
+    # fires far more reliably (delays of 15-60 min are routine on free tier).
+    - cron: "7 3 * * 1-5"
+  workflow_dispatch:   # allow manual trigger from the Actions tab
+
+jobs:
+  scrape-and-send:
+    name: Scrape jobs & send Telegram digest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup ──────────────────────────────────────────────────────
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: pip install -r scripts/requirements.txt
+
+      # ── 4. Run scraper ────────────────────────────────────────────────────────
+      - name: Run job scraper
+        env:
+          # Required secrets — set these in:
+          # GitHub repo → Settings → Secrets and variables → Actions
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+
+          # Optional: live USD→LKR and other rates from https://exchangerate-api.com (free tier)
+          EXCHANGE_RATE_API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
+        run: python scripts/main.py
+
+      # ── 5. Upload log on failure ──────────────────────────────────────────────
+      - name: Upload scraper log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-log-${{ github.run_id }}
+          path: "*.log"
+          if-no-files-found: ignore
