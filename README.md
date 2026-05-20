@@ -1,6 +1,6 @@
 # QA Job Daily Scraper
 
-Runs every weekday at **08:37 Sri Lanka time (03:07 UTC)** via GitHub Actions.
+Runs every morning, including weekends, at **08:37 Sri Lanka time (03:07 UTC)** via GitHub Actions.
 Searches QA / QA Automation job sources, filters them for Sri Lanka-friendly fresh graduate roles, and sends a
 Telegram digest to your configured chat.
 
@@ -9,11 +9,12 @@ Telegram digest to your configured chat.
 | Step | Detail |
 |------|--------|
 | **Sources** | Indeed, ZipRecruiter, We Work Remotely, Remotive, RemoteOK, Greenhouse, Lever, Jobright, Jobicy, Working Nomads, Work at a Startup, Arbeitnow, Remote First Jobs, RemoteJobs.org, WorkAnywhere, Himalayas, HireWeb3 |
-| **Roles** | QA Intern, Trainee QA, Associate QA Engineer, Junior QA Engineer, Graduate QA Engineer, QA Engineer, Software Test Engineer, Automation QA Engineer |
+| **Roles** | QA Intern, QA Internship, Software QA Internship, Quality Assurance Internship, Trainee QA, Associate QA Engineer, Junior QA Engineer, Graduate QA Engineer, QA Engineer, Software Test Engineer, Automation QA Engineer |
 | **Location filter** | Sri Lanka remote/hybrid/onsite roles, plus Sri Lanka-friendly remote roles |
 | **Timezone filter** | Sri Lanka/India, APAC, Singapore, Australia/NZ, Middle East, UK/EU/EMEA, and worldwide/global roles |
 | **Salary gate** | Disabled by default for fresh-grad roles; set `MIN_LKR_MONTHLY` if you want a minimum |
-| **Company signals** | Priority companies are sorted to the top |
+| **Role ranking** | Internships and trainee roles are sorted first; roles with experience requirements are pushed lower |
+| **Company signals** | Priority companies are sorted near the top after role fit |
 | **Resume keywords** | Each job includes matched skills from the job description |
 | **Deduplication** | Cross-source duplicates are removed |
 
@@ -105,7 +106,7 @@ python scripts\main.py
 | Change minimum salary | `MIN_LKR_MONTHLY` env var or default in `scripts/main.py` |
 | Add priority companies | `PRIORITY_COMPANIES` set |
 | Add skill keywords | `SKILL_KEYWORDS` list |
-| Run on weekends too | Change `1-5` to `*` in the cron expression |
+| Change run schedule | Edit the cron expression in `.github/workflows/daily_job_scraper.yml` |
 
 ## Telegram Digest
 
