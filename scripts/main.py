@@ -95,7 +95,11 @@ REMOTE_LOCATION_BLOCKLIST = {
 # Used only for Indeed + ZipRecruiter (LinkedIn/Glassdoor actively block scraping)
 JOBSPY_QUERIES = [
     "QA Intern",
+    "QA Internship",
+    "Software QA Internship",
+    "Quality Assurance Internship",
     "Quality assurance Intern",
+    "Remote QA Intern",
     "Quality Assurance Engineer",
     "Software Quality Assurance Engineer",
     "Software QA Engineer",
@@ -104,7 +108,6 @@ JOBSPY_QUERIES = [
     "Junior QA Engineer",
     "Graduate QA Engineer",
     "QA Engineer",
-    "Senior QA Engineer",
     "Software Test Engineer",
     "Automation QA Engineer",
 ]
@@ -1124,6 +1127,44 @@ def is_fresh_grad_friendly(job: dict) -> bool:
     return True
 
 
+_INTERNSHIP_SIGNAL = re.compile(
+    r"\b(intern|internship|trainee|apprentice|campus)\b",
+    re.IGNORECASE,
+)
+
+_FRESH_GRAD_SIGNAL = re.compile(
+    r"\b(fresh(er| graduate)?|graduate|entry.?level|junior|associate|level 1|level i|engineer i|qa i)\b",
+    re.IGNORECASE,
+)
+
+_LOW_EXPERIENCE_SIGNAL = re.compile(
+    r"\b(0\s*[-]\s*2 years|0\+?\s*years|1\+?\s*years|2\+?\s*years)\b",
+    re.IGNORECASE,
+)
+
+_EXPERIENCE_SIGNAL = re.compile(
+    r"\b(\d+)\+?\s*(?:years|yrs)\b|\bexperience (?:required|needed|preferred)\b",
+    re.IGNORECASE,
+)
+
+
+def role_priority_rank(job: dict) -> int:
+    """Lower is better: internships first, experience-heavy roles last."""
+    title = job.get("title", "")
+    text = f"{title} {job.get('description', '')}"
+    if _INTERNSHIP_SIGNAL.search(title):
+        return 0
+    if _INTERNSHIP_SIGNAL.search(text):
+        return 1
+    if _FRESH_GRAD_SIGNAL.search(title):
+        return 2
+    if _FRESH_GRAD_SIGNAL.search(text) or _LOW_EXPERIENCE_SIGNAL.search(text):
+        return 3
+    if _EXPERIENCE_SIGNAL.search(text):
+        return 5
+    return 4
+
+
 def parse_posted_dt(job: dict) -> Optional[datetime]:
     raw = job.get("date_posted")
     if raw is None:
@@ -1580,10 +1621,11 @@ def main() -> None:
 
     qualified = after_salary
 
-    # ── 3. Deduplicate & sort (priority companies first, then newest) ─────────
+    # ── 3. Deduplicate & sort (intern roles first, then priority companies, then newest) ─────────
     qualified = deduplicate(qualified)
     qualified.sort(
         key=lambda j: (
+            role_priority_rank(j),
             0 if j["company"].lower().strip() in PRIORITY_COMPANIES else 1,
             -(parse_posted_dt(j) or datetime.min.replace(tzinfo=timezone.utc)).timestamp(),
         ),
