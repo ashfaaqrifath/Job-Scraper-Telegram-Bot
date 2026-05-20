@@ -2,7 +2,7 @@ name: Daily Job Telegram Digest
 
 on:
   schedule:
-    # 03:07 UTC = 08:37 Sri Lanka time (UTC+5:30) — Monday through Friday.
+    # 03:07 UTC = 08:37 Sri Lanka time (UTC+5:30) - every day, including weekends.
     # Note: GitHub Actions cron is best-effort. Top-of-hour (:00) is the worst
     # slot because millions of jobs queue at once. An off-cycle minute like :07
     # fires far more reliably (delays of 15-60 min are routine on free tier).
